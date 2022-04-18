@@ -2,6 +2,9 @@ var express = require('express');
 var router = express.Router();
 var UserController = require('../controllers/UserController.js');
 
+const multer = require('multer')
+const upload = multer({ dest: 'public/images' })
+
 /*
  * GET
  */
@@ -14,12 +17,14 @@ router.get('/auth', UserController.auth, function(req, res) { return res.status(
  */
 router.get('/:id', UserController.show);
 
-router.post('/login', UserController.login);
+router.post('/login', upload.single('image'), UserController.login);
 
 /*
  * POST
  */
 router.post('/', UserController.is_exists, UserController.create);
+
+router.post('/register', UserController.is_exists, UserController.create);
 
 /*
  * PUT

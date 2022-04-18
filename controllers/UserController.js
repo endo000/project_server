@@ -11,10 +11,14 @@ module.exports = {
         UserModel.findOne({ username: req.body.username }, function(err, user) {
             if (err) return next(err);
             if (user && req.body.password == user.password) {
-                req.session.userid = user._id;
-                return res.status(200).send(user);
+                if (req.file) {
+                    req.session.userid = user._id;
+                    return res.status(200).send(user);
+                } else {
+                    return res.status(401).send('Image not provided');
+                }
             }
-            return res.status(401).send('Not found');
+            return res.status(404).send('Not found');
         });
     },
 
@@ -25,7 +29,7 @@ module.exports = {
         UserModel.findById(req.session.userid, function(err, user) {
             if (err) return next(err);
             if (!user) {
-                return res.status(401).send('Not found')
+                return res.status(403).send('Not found')
             };
 
             next();
