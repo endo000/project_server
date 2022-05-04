@@ -10,7 +10,7 @@ const upload = multer({ dest: 'public/images' })
  */
 router.get('/', UserController.auth, UserController.list);
 
-router.get('/auth', UserController.auth, function(req, res) { return res.status(200).send('OK'); });
+router.get('/auth', UserController.auth, function (req, res) { return res.status(200).json({ message: 'OK' }); });
 
 /*
  * GET
