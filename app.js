@@ -31,6 +31,20 @@ console.log(results);
 
 var app = express();
 
+var cors = require('cors');
+var allowedOrigins = ['http://localhost:3000', 'https://localhost:3001']
+app.use(cors({
+    credentials: true,
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    }
+}));
+
 var mongoose = require('mongoose');
 var mongoDB = process.env.MONGO_URL;
 mongoose.connect(mongoDB);
@@ -47,7 +61,7 @@ app.use(session({
     store: MongoStore.create({ mongoUrl: mongoDB })
 }));
 
-// setInterval(TrafficController.scrapper, 1000 * 5);
+setInterval(TrafficController.scrapper, 1000 * 5);
 
 app.use(logger('dev'));
 app.use(express.json());

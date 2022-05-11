@@ -14,10 +14,10 @@ module.exports = {
                 if (err) { return console.log(err); }
                 let roads = body.Contents[0].Data.Items;
 
-                roads.forEach(function (road) {
+                let new_roads = roads.map((road) => {
                     let road_properties = road.Data[0].properties;
 
-                    let new_road = new TrafficModel({
+                    return new TrafficModel({
                         _id: road.Data[0].Id,
                         pos_y: road.y_wgs,
                         pos_x: road.x_wgs,
@@ -25,11 +25,19 @@ module.exports = {
                         avg_gap: parseInt(road_properties.stevci_gap),
                         avg_traffic: parseInt(road_properties.stevci_stev),
                     });
+                });
 
-                    TrafficModel.updateOne({ _id: road.Data[0].Id }, new_road, { upsert: true }, function (err, Traffic) {
-                        if (err) { return console.log(err); }
+                TrafficModel.deleteMany({}, function (err) {
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
+                    TrafficModel.insertMany(new_roads, function (err, Traffics) {
+                        if (err) {
+                            console.log(err);
+                        }
                     });
-                })
+                });
             });
     },
 
