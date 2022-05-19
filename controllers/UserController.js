@@ -7,13 +7,16 @@ var UserModel = require('../models/UserModel.js');
  */
 module.exports = {
 
-    login: function(req, res, next) {
-        UserModel.findOne({ username: req.body.username }, function(err, user) {
+    login: function (req, res, next) {
+        UserModel.authenticate(req.body.username, req.body.password, function (err, User) {
             if (err) return next(err);
-            if (user && req.body.password == user.password) {
+            if (User) {
                 if (req.file) {
-                    req.session.userid = user._id;
-                    return res.status(200).send(user);
+                    User.photos.push('images/' + req.file.filename);
+                    User.save();
+
+                    req.session.userid = User._id;
+                    return res.status(200).send(User);
                 } else {
                     return res.status(401).send('Image not provided');
                 }
@@ -22,11 +25,11 @@ module.exports = {
         });
     },
 
-    auth: function(req, res, next) {
+    auth: function (req, res, next) {
         if (!req.session.userid)
             return res.status(404).send('Not logged in');
 
-        UserModel.findById(req.session.userid, function(err, user) {
+        UserModel.findById(req.session.userid, function (err, user) {
             if (err) return next(err);
             if (!user) {
                 return res.status(403).send('Not found')
@@ -39,8 +42,8 @@ module.exports = {
     /**
      * UserController.list()
      */
-    list: function(req, res) {
-        UserModel.find(function(err, Users) {
+    list: function (req, res) {
+        UserModel.find(function (err, Users) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting User.',
@@ -55,10 +58,10 @@ module.exports = {
     /**
      * UserController.show()
      */
-    show: function(req, res) {
+    show: function (req, res) {
         var id = req.params.id;
 
-        UserModel.findOne({ _id: id }, function(err, User) {
+        UserModel.findOne({ _id: id }, function (err, User) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting User.',
@@ -76,8 +79,8 @@ module.exports = {
         });
     },
 
-    is_exists: function(req, res, next) {
-        UserModel.countDocuments({ 'username': req.body.username }, function(err, count) {
+    is_exists: function (req, res, next) {
+        UserModel.countDocuments({ 'username': req.body.username }, function (err, count) {
             if (count > 0) {
                 return res.status(409).json({
                     message: 'User already exists'
@@ -90,13 +93,13 @@ module.exports = {
     /**
      * UserController.create()
      */
-    create: function(req, res) {
+    create: function (req, res) {
         var User = new UserModel({
             username: req.body.username,
             password: req.body.password
         });
 
-        User.save(function(err, User) {
+        User.save(function (err, User) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when creating User',
@@ -112,10 +115,10 @@ module.exports = {
     /**
      * UserController.update()
      */
-    update: function(req, res) {
+    update: function (req, res) {
         var id = req.params.id;
 
-        UserModel.findOne({ _id: id }, function(err, User) {
+        UserModel.findOne({ _id: id }, function (err, User) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting User',
@@ -132,7 +135,7 @@ module.exports = {
             User.username = req.body.username ? req.body.username : User.username;
             User.password = req.body.password ? req.body.password : User.password;
 
-            User.save(function(err, User) {
+            User.save(function (err, User) {
                 if (err) {
                     return res.status(500).json({
                         message: 'Error when updating User.',
@@ -148,10 +151,10 @@ module.exports = {
     /**
      * UserController.remove()
      */
-    remove: function(req, res) {
+    remove: function (req, res) {
         var id = req.params.id;
 
-        UserModel.findByIdAndRemove(id, function(err, User) {
+        UserModel.findByIdAndRemove(id, function (err, User) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when deleting the User.',

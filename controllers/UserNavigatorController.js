@@ -60,7 +60,7 @@ module.exports = {
                 });
             }
 
-            let navigationHistory = new NavigatorHistoryModel({ pos_y: req.body.pos_y, pox_x: req.body.pos_x, speed: req.body.speed });
+            let navigationHistory = new NavigatorHistoryModel(req.body);
             navigationHistory.save(function (err, navigationHistory) {
                 if (err) {
                     return res.status(500).json({
@@ -94,7 +94,7 @@ module.exports = {
     },
 
     finish: function (req, res) {
-        UsernavigatorModel.findOneAndUpdate({ user: req.session.userid, finished: false }, { finished: true }, function (err, UserNavigator) {
+        UsernavigatorModel.findOneAndUpdate({ user: req.session.userid, finished: false }, { finished: true, finishedAt: new Date() }, function (err, UserNavigator) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting UserNavigator',
