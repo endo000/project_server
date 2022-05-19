@@ -1,4 +1,5 @@
 const request = require('request');
+var mongoose = require('mongoose');
 
 var TrafficModel = require('../models/TrafficModel.js');
 
@@ -27,17 +28,22 @@ module.exports = {
                     });
                 });
 
-                TrafficModel.deleteMany({}, function (err) {
-                    if (err) {
-                        console.log(err);
-                        return;
-                    }
-                    TrafficModel.insertMany(new_roads, function (err, Traffics) {
-                        if (err) {
-                            console.log(err);
-                        }
+                let session;
+                TrafficModel.startSession().
+                    then(function (_session) {
+                        session = _session;
+                        session.startTransaction();
+                        return TrafficModel.deleteMany({}, { session: session })
+                    }).
+                    then(function () {
+                        return TrafficModel.insertMany(new_roads, { session: session })
+                    }).
+                    then(function () {
+                        return session.commitTransaction();
+                    }).
+                    then(function () {
+                        session.endSession();
                     });
-                });
             });
     },
 
