@@ -1,4 +1,6 @@
 var UserModel = require('../models/UserModel.js');
+var UserNavigatorModel = require('../models/UserNavigatorModel.js');
+var NavigatorHistoryModel = require('../models/NavigatorHistoryModel.js');
 
 /**
  * UserController.js
@@ -76,6 +78,45 @@ module.exports = {
             }
 
             return res.json(User);
+        });
+    },
+
+    showByName: function (req, res) {
+        var username = req.params.username;
+        console.log(username);
+
+        UserModel.findOne({ username: username }, function (err, User) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when getting User.',
+                    error: err
+                });
+            }
+
+            if (!User) {
+                return res.status(404).json({
+                    message: 'No such User'
+                });
+            }
+
+            UserNavigatorModel.find({ user: User._id }).
+                populate('user').populate('history').
+                exec(function (err, UserNavigator) {
+                    if (err) {
+                        return res.status(500).json({
+                            message: 'Error when getting UserNavigator.',
+                            error: err
+                        });
+                    }
+
+                    if (!UserNavigator) {
+                        return res.status(404).json({
+                            message: 'No such UserNavigator'
+                        });
+                    }
+
+                    return res.json(UserNavigator);
+                });
         });
     },
 

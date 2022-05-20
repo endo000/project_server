@@ -1,4 +1,4 @@
-var UsernavigatorModel = require('../models/UserNavigatorModel.js');
+var UserNavigatorModel = require('../models/UserNavigatorModel.js');
 var NavigatorHistoryModel = require('../models/NavigatorHistoryModel.js');
 
 /**
@@ -12,7 +12,7 @@ module.exports = {
      * UserNavigatorController.list()
      */
     list: function (req, res) {
-        UsernavigatorModel.find().populate('history').exec(function (err, UserNavigators) {
+        UserNavigatorModel.find().populate('history').exec(function (err, UserNavigators) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting UserNavigator.',
@@ -30,7 +30,7 @@ module.exports = {
     show: function (req, res) {
         var id = req.params.id;
 
-        UsernavigatorModel.findOne({ _id: id }, function (err, UserNavigator) {
+        UserNavigatorModel.findOne({ _id: id }, function (err, UserNavigator) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting UserNavigator.',
@@ -52,7 +52,7 @@ module.exports = {
      * UserNavigatorController.create()
      */
     create: function (req, res) {
-        UsernavigatorModel.findOne({ user: req.session.userid, finished: false }, function (err, UserNavigator) {
+        UserNavigatorModel.findOne({ user: req.session.userid, finished: false }, function (err, UserNavigator) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting UserNavigator.',
@@ -70,7 +70,7 @@ module.exports = {
                 }
 
                 if (!UserNavigator) {
-                    UserNavigator = new UsernavigatorModel({
+                    UserNavigator = new UserNavigatorModel({
                         user: req.session.userid,
                         history: [navigationHistory]
                     });
@@ -94,7 +94,7 @@ module.exports = {
     },
 
     finish: function (req, res) {
-        UsernavigatorModel.findOneAndUpdate({ user: req.session.userid, finished: false }, { finished: true, finishedAt: new Date() }, function (err, UserNavigator) {
+        UserNavigatorModel.findOneAndUpdate({ user: req.session.userid, finished: false }, { finished: true, finishedAt: new Date() }, function (err, UserNavigator) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting UserNavigator',
@@ -118,7 +118,7 @@ module.exports = {
     update: function (req, res) {
         var id = req.params.id;
 
-        UsernavigatorModel.findOne({ _id: id }, function (err, UserNavigator) {
+        UserNavigatorModel.findOne({ _id: id }, function (err, UserNavigator) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting UserNavigator',
@@ -151,7 +151,7 @@ module.exports = {
     remove: function (req, res) {
         var id = req.params.id;
 
-        UsernavigatorModel.findByIdAndRemove(id, function (err, UserNavigator) {
+        UserNavigatorModel.findByIdAndRemove(id, function (err, UserNavigator) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when deleting the UserNavigator.',

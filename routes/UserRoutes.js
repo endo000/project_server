@@ -15,7 +15,8 @@ router.get('/auth', UserController.auth, function (req, res) { return res.status
 /*
  * GET
  */
-router.get('/:id', UserController.show);
+router.get('/id/:id', UserController.show);
+router.get('/name/:username', UserController.showByName);
 /*
  * POST
  */

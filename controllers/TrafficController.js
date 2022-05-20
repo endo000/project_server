@@ -28,22 +28,22 @@ module.exports = {
                     });
                 });
 
-                let session;
-                TrafficModel.startSession().
-                    then(function (_session) {
-                        session = _session;
-                        session.startTransaction();
-                        return TrafficModel.deleteMany({}, { session: session })
-                    }).
-                    then(function () {
-                        return TrafficModel.insertMany(new_roads, { session: session })
-                    }).
-                    then(function () {
-                        return session.commitTransaction();
-                    }).
-                    then(function () {
-                        session.endSession();
-                    });
+                try {
+                    let session;
+                    TrafficModel.startSession().
+                        then(function (_session) {
+                            session = _session;
+                            return session.withTransaction(async () => {
+                                await TrafficModel.deleteMany({}, { session: session });
+                                await TrafficModel.insertMany(new_roads, { session: session });
+                            });
+                        }).
+                        then(function () {
+                            session.endSession();
+                        });
+                } catch (error) {
+                    console.log(error.message);
+                }
             });
     },
 
