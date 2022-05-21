@@ -5,22 +5,22 @@ var Schema = mongoose.Schema;
 var UserSchema = new Schema({
     'username': String,
     'password': String,
-    'photos': [{ type: String }]
+    'photo': String
 });
 
 UserSchema.statics.authenticate = function (username, password, callback) {
     User.findOne({ username: username })
-        .exec(function (err, user) {
+        .exec(function (err, User) {
             if (err) {
                 return callback(err);
-            } else if (!user) {
+            } else if (!User) {
                 var err = new Error("User not found");
                 err.status = 401;
                 return callback(err);
             }
-            bcrypt.compare(password, user.password, function (err, result) {
+            bcrypt.compare(password, User.password, function (err, result) {
                 if (result === true) {
-                    return callback(null, user);
+                    return callback(null, User);
                 } else {
                     return callback();
                 }
@@ -29,12 +29,12 @@ UserSchema.statics.authenticate = function (username, password, callback) {
 }
 
 UserSchema.pre('save', function (next) {
-    var user = this;
-    bcrypt.hash(user.password, 10, function (err, hash) {
+    var User = this;
+    bcrypt.hash(User.password, 10, function (err, hash) {
         if (err) {
             return next(err);
         }
-        user.password = hash;
+        User.password = hash;
         next();
     });
 });

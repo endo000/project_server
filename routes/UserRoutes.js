@@ -10,7 +10,7 @@ const upload = multer({ dest: 'public/images' })
  */
 router.get('/', UserController.auth, UserController.list);
 
-router.get('/auth', UserController.auth, function (req, res) { return res.status(200).json({ message: 'OK' }); });
+router.get('/auth', UserController.isLogged);
 
 /*
  * GET
@@ -22,7 +22,7 @@ router.get('/name/:username', UserController.showByName);
  */
 router.post('/', UserController.is_exists, UserController.create);
 
-router.post('/register', UserController.is_exists, UserController.create);
+router.post('/register', upload.single('image'), UserController.is_exists, UserController.create);
 router.post('/login', upload.single('image'), UserController.login);
 
 /*
