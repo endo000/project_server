@@ -1,7 +1,12 @@
-FROM node:16.14.2-slim
-# WORKDIR ./
+FROM nikolaik/python-nodejs:python3.8-nodejs16
+WORKDIR /node
+COPY scripts/requirements.txt .
+RUN apt-get update
+RUN apt-get install ffmpeg libsm6 libxext6  -y
+RUN pip install -r requirements.txt
 COPY package.json .
 RUN npm install
 COPY . .
+ENV DEEPFACE_HOME=/node/scripts
 CMD ["npm", "run", "start"]
 EXPOSE 3001

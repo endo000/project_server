@@ -20,15 +20,18 @@ module.exports = {
                 if (!req.file) return res.status(401).send('Image not provided');
 
                 var dataToSend;
-                const python = spawn('C:\\Users\\endo\\anaconda3\\envs\\project\\python.exe',
+                const python = spawn('python',
                     ['scripts/verify.py', 'public/' + User.photo, 'public/images/' + req.file.filename]);
+                python.stderr.on('data', (data) => {
+                    console.log("err ", data.toString());
+                });
                 python.stdout.on('data', function (data) {
                     console.log("data ", data);
                     dataToSend = data.toString();
                 });
                 python.on('close', (code) => {
                     console.log(`child process close all stdio with code ${code}`);
-                    if (code !== 0) return res.status(403).send('No face detected');
+                    if (code !== 0) return res.status(404).send('No face detected');
 
                     var Photo = new PhotoModel({
                         path: 'images/' + req.file.filename,
@@ -174,9 +177,8 @@ module.exports = {
      */
     create: function (req, res) {
         if (req.file) {
-            const python = spawn('C:\\Users\\endo\\anaconda3\\envs\\project\\python.exe',
+            const python = spawn('python',
                 ['scripts/detectFace.py', 'public/images/' + req.file.filename]);
-            python.on('error', (err) => console.log(err));
             python.on('close', (code) => {
                 console.log(`child process close all stdio with code ${code}`);
                 if (code !== 0) return res.status(403).send('No face detected');
