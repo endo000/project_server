@@ -173,18 +173,37 @@ module.exports = {
      * UserController.create()
      */
     create: function (req, res) {
-        var dataToSend;
-        const python = spawn('C:\\Users\\endo\\anaconda3\\envs\\project\\python.exe',
-            ['scripts/detectFace.py', 'public/images/' + req.file.filename]);
-        python.on('error', (err) => console.log(err));
-        python.on('close', (code) => {
-            console.log(`child process close all stdio with code ${code}`);
-            if (code !== 0) return res.status(403).send('No face detected');
+        if (req.file) {
+            const python = spawn('C:\\Users\\endo\\anaconda3\\envs\\project\\python.exe',
+                ['scripts/detectFace.py', 'public/images/' + req.file.filename]);
+            python.on('error', (err) => console.log(err));
+            python.on('close', (code) => {
+                console.log(`child process close all stdio with code ${code}`);
+                if (code !== 0) return res.status(403).send('No face detected');
 
+                var User = new UserModel({
+                    username: req.body.username,
+                    password: req.body.password,
+                    photo: 'images/' + req.file.filename
+                });
+
+                User.save(function (err, User) {
+                    if (err) {
+                        return res.status(500).json({
+                            message: 'Error when creating User',
+                            error: err
+                        });
+                    }
+                    req.session.userid = User._id;
+
+                    return res.status(201).json(User);
+                });
+            });
+        }
+        else {
             var User = new UserModel({
                 username: req.body.username,
                 password: req.body.password,
-                photo: req.file && 'images/' + req.file.filename
             });
 
             User.save(function (err, User) {
@@ -197,8 +216,9 @@ module.exports = {
                 req.session.userid = User._id;
 
                 return res.status(201).json(User);
+
             });
-        });
+        }
     },
 
     /**
