@@ -132,3 +132,4 @@ dist
 public/images
 
 .gitsecret/keys/random_seed
+*.h5
