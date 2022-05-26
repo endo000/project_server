@@ -6,7 +6,6 @@ RUN apt-get install ffmpeg libsm6 libxext6  -y
 RUN pip install -r requirements.txt
 COPY package.json .
 RUN npm install
-COPY . .
-ENV DEEPFACE_HOME=/node/scripts
+COPY . /node
 CMD ["npm", "run", "start"]
 EXPOSE 3001
