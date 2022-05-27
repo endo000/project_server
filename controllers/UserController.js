@@ -1,8 +1,9 @@
 var UserModel = require('../models/UserModel.js');
 var UserNavigatorModel = require('../models/UserNavigatorModel.js');
 var PhotoModel = require('../models/PhotoModel.js');
-var NavigatorHistoryModel = require('../models/NavigatorHistoryModel.js');
 const { spawn } = require('child_process');
+var fs = require('fs');
+const request = require('request');
 
 /**
  * UserController.js
@@ -19,34 +20,32 @@ module.exports = {
             if (User.photo) {
                 if (!req.file) return res.status(401).send('Image not provided');
 
-                var dataToSend;
-                const python = spawn('python',
-                    ['scripts/verify.py', 'public/' + User.photo, 'public/images/' + req.file.filename]);
-                python.stderr.on('data', (data) => {
-                    console.log("err ", data.toString());
-                });
-                python.stdout.on('data', function (data) {
-                    console.log("data ", data);
-                    dataToSend = data.toString();
-                });
-                python.on('close', (code) => {
-                    console.log(`child process close all stdio with code ${code}`);
-                    if (code !== 0) return res.status(404).send('No face detected');
+                let img1 = fs.readFileSync('public/images/' + req.file.filename, 'base64');
+                let img2 = fs.readFileSync('public/images/' + User.photo, 'base64');
 
-                    var Photo = new PhotoModel({
-                        path: 'images/' + req.file.filename,
-                        user: User._id
+                request({
+                    url: 'http://face:5000/verify',
+                    method: 'POST',
+                    json: {
+                        img1: img1,
+                        img2: img2
+                    }
+                },
+                    function (err, face_res, body) {
+                        if (err) return res.status(404).send(err);
+
+                        console.log(body);
+                        if (!body.verified) return res.status(403).send('Not verified');
+
+                        var Photo = new PhotoModel({
+                            path: 'images/' + req.file.filename,
+                            user: User._id
+                        });
+                        Photo.save();
+
+                        req.session.userid = User._id;
+                        return res.status(200).send(User);
                     });
-                    Photo.save();
-
-                    const verification = JSON.parse(dataToSend);
-                    console.log(verification);
-                    if (!verification.verified) return res.status(403).send('Not verified');
-
-
-                    req.session.userid = User._id;
-                    return res.status(200).send(User);
-                });
             }
             else {
                 req.session.userid = User._id;
@@ -177,30 +176,39 @@ module.exports = {
      */
     create: function (req, res) {
         if (req.file) {
-            const python = spawn('python',
-                ['scripts/detectFace.py', 'public/images/' + req.file.filename]);
-            python.on('close', (code) => {
-                console.log(`child process close all stdio with code ${code}`);
-                if (code !== 0) return res.status(403).send('No face detected');
+            let img = fs.readFileSync('public/images/' + req.file.filename, 'base64');
 
-                var User = new UserModel({
-                    username: req.body.username,
-                    password: req.body.password,
-                    photo: 'images/' + req.file.filename
+            request({
+                url: 'http://face:5000/detectface',
+                method: 'POST',
+                json: {
+                    img: img,
+                }
+            },
+                function (err, face_res, body) {
+                    if (err) return res.status(404).send(err);
+
+                    console.log(body);
+                    if (!body.detected) return res.status(403).send('Not face detected');
+
+                    var User = new UserModel({
+                        username: req.body.username,
+                        password: req.body.password,
+                        photo: req.file.filename
+                    });
+
+                    User.save(function (err, User) {
+                        if (err) {
+                            return res.status(500).json({
+                                message: 'Error when creating User',
+                                error: err
+                            });
+                        }
+                        req.session.userid = User._id;
+
+                        return res.status(201).json(User);
+                    });
                 });
-
-                User.save(function (err, User) {
-                    if (err) {
-                        return res.status(500).json({
-                            message: 'Error when creating User',
-                            error: err
-                        });
-                    }
-                    req.session.userid = User._id;
-
-                    return res.status(201).json(User);
-                });
-            });
         }
         else {
             var User = new UserModel({
